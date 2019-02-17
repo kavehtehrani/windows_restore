@@ -6,20 +6,26 @@ Once the VPN ends it restores to the last layout saved before the VPN began.
 I wrote this little script since I was tired of moving my windows around while
 using VPN to my PC since the resolutions are usually not the same
 
+Optional: If user is idle during that time, it will move the mouse just a tiny bit
+to stop Windows from going into sleep
+
 Kaveh Tehrani
 """
 
 import datetime
 import win32gui
 import ctypes
+import win32api
 import time
 import win32con
 import pickle
+import pyautogui
 
 
 SM_REMOTE_SESSION = 0x1000
 STR_HWND_SAVE_FILE = 'hwnd_state'
-SUSPECT_TIME = 5*60                     # suspend time
+B_DONT_IDLE = True
+SUSPEND_TIME = 5                     # suspend time
 d_hwnd = {}                             # storing window state
 
 
@@ -66,7 +72,19 @@ if __name__ == '__main__':
     n_state = 0
     prev_state = ctypes.windll.user32.GetSystemMetrics(SM_REMOTE_SESSION) == 1
 
+    n_sign = 1
     while True:
+        if B_DONT_IDLE:
+            last_active = win32api.GetLastInputInfo()
+            now = win32api.GetTickCount()
+            elapsed_seconds = (now - last_active)/1e3
+            
+            if elapsed_seconds >= SUSPEND_TIME:
+                x, y = pyautogui.position()
+                print(f'Idle detected for {elapsed_seconds} seconds, moving mouse on {n_sign}')
+                pyautogui.moveTo(x + 10*n_sign, y + 10*n_sign)
+                n_sign *= -1
+
         if ctypes.windll.user32.GetSystemMetrics(SM_REMOTE_SESSION) == 0:
             # logged in person
             if prev_state == 0:
@@ -94,4 +112,4 @@ if __name__ == '__main__':
             prev_state = 1
             print(f'Remote session detected at {datetime.datetime.now()}')
 
-        time.sleep(SUSPECT_TIME)
+        time.sleep(SUSPEND_TIME)
