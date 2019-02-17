@@ -25,7 +25,7 @@ import pyautogui
 SM_REMOTE_SESSION = 0x1000
 STR_HWND_SAVE_FILE = 'hwnd_state'
 B_DONT_IDLE = True
-SUSPEND_TIME = 5                     # suspend time
+SUSPEND_TIME = 5*60                     # suspend time
 d_hwnd = {}                             # storing window state
 
 
