@@ -17,6 +17,7 @@ import win32gui
 import ctypes
 import win32api
 import time
+import datetime
 import win32con
 import pickle
 import pyautogui
@@ -24,9 +25,15 @@ import pyautogui
 
 SM_REMOTE_SESSION = 0x1000
 STR_HWND_SAVE_FILE = 'hwnd_state'
-B_DONT_IDLE = True
 SUSPEND_TIME = 5*60                     # suspend time
 d_hwnd = {}                             # storing window state
+
+# window of time to stop not idling
+B_DONT_IDLE = True
+cur_time = datetime.datetime.now()
+IDLE_WINDOW_TIME = {'start': datetime.datetime(cur_time.year, cur_time.month, cur_time.day, 1, 0),
+                    'end': datetime.datetime(cur_time.year, cur_time.month, cur_time.day, 8, 0)}
+
 
 
 def read_windows(hwnd, _):
@@ -78,8 +85,10 @@ if __name__ == '__main__':
             last_active = win32api.GetLastInputInfo()
             now = win32api.GetTickCount()
             elapsed_seconds = (now - last_active)/1e3
-            
-            if elapsed_seconds >= SUSPEND_TIME:
+
+            if elapsed_seconds >= SUSPEND_TIME and \
+                    IDLE_WINDOW_TIME['start'] < datetime.datetime.now() > IDLE_WINDOW_TIME['end']:
+
                 x, y = pyautogui.position()
                 print(f'Idle detected for {elapsed_seconds} seconds, moving mouse on {n_sign}')
                 pyautogui.moveTo(x + 10*n_sign, y + 10*n_sign)
